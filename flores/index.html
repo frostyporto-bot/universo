@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nossa viagem pelo universo</title>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 2.5s ease;
+    }
+
+    .intro {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: white;
+      background: radial-gradient(circle at top, #12002b, black 80%);
+      z-index: 20;
+      opacity: 1;
+      transition: opacity 2.5s ease;
+      padding: 20px;
+    }
+
+    .intro h1 {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      text-shadow: 0 0 25px rgba(255,255,255,0.8);
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { opacity: 0.7; }
+      to   { opacity: 1; }
+    }
+
+    .intro p {
+      font-size: 1.3rem;
+      opacity: 0.8;
+      max-width: 550px;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+
+    .credits {
+      font-size: 1rem;
+      opacity: 0.5;
+      margin-bottom: 35px;
+    }
+
+    .intro button {
+      padding: 16px 45px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #ffffff, #cfcfcf);
+      color: black;
+      font-weight: bold;
+      box-shadow: 0 0 25px rgba(255,255,255,0.4);
+      transition: 0.3s;
+    }
+
+    .intro button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 45px rgba(255,255,255,0.7);
+    }
+
+    .finalBox {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 2s ease;
+    }
+
+    .finalCard {
+      background: rgba(0,0,0,0.75);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 40px rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+    }
+
+    .finalCard h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    .finalCard button {
+      margin: 10px;
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .yes {
+      background: white;
+      color: black;
+    }
+
+    .no {
+      background: rgba(255,0,0,0.7);
+      color: white;
+      position: relative;
+    }
+
+    .goodMessage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      color: white;
+      opacity: 0;
+      transition: opacity 2s ease;
+      z-index: 40;
+      pointer-events: none;
+      text-shadow: 0 0 25px rgba(255,255,255,0.8);
+      padding: 30px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="intro" id="intro">
+    <h1>Nossa viagem pelo universo</h1>
+    <p>
+      Posso te levar pra conhecer o universo?<br>
+      Só você e eu.
+    </p>
+
+    <div class="credits">
+      Criado por João Porto
+    </div>
+
+    <button id="startBtn">Começar</button>
+  </div>
+
+  <canvas id="space"></canvas>
+
+  <div class="finalBox" id="finalBox">
+    <div class="finalCard">
+      <h2>Gostou da viagem?</h2>
+      <button class="yes" id="yesBtn">Sim</button>
+      <button class="no" id="noBtn">Não</button>
+    </div>
+  </div>
+
+  <div class="goodMessage" id="goodMessage">
+    Que bom... então talvez a gente possa fazer essa viagem de verdade.
+  </div>
+
+  <audio id="ambience" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5c2dbb6c38.mp3?filename=space-atmosphere-ambient-110397.mp3">
+  </audio>
+
+  <script>
+    const intro = document.getElementById("intro");
+    const startBtn = document.getElementById("startBtn");
+
+    const canvas = document.getElementById("space");
+    const ctx = canvas.getContext("2d");
+
+    const audio = document.getElementById("ambience");
+
+    const finalBox = document.getElementById("finalBox");
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+
+    const goodMessage = document.getElementById("goodMessage");
+
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+    let stars = [];
+    let dust = [];
+    let meteors = [];
+
+    const starColors = ["white", "#ffe9a6", "#a6d8ff", "#ffb3b3"];
+
+    function createStars() {
+      stars = [];
+      for (let i = 0; i < 900; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          z: Math.random() * canvas.width,
+          color: starColors[Math.floor(Math.random() * starColors.length)]
+        });
+      }
+    }
+
+    function createDust() {
+      dust = [];
+      for (let i = 0; i < 200; i++) {
+        dust.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          z: Math.random() * canvas.width,
+          opacity: Math.random() * 0.12
+        });
+      }
+    }
+
+    function spawnMeteor() {
+      meteors.push({
+        x: Math.random() * canvas.width,
+        y: -200,
+        vx: 2,
+        vy: 3
+      });
+    }
+
+    setInterval(() => {
+      if (meteors.length < 1) spawnMeteor();
+    }, 7500);
+
+    function drawNebula() {
+      let gradient = ctx.createRadialGradient(
+        canvas.width * 0.3,
+        canvas.height * 0.4,
+        50,
+        canvas.width * 0.3,
+        canvas.height * 0.4,
+        700
+      );
+
+      gradient.addColorStop(0, "rgba(120,50,200,0.18)");
+      gradient.addColorStop(0.5, "rgba(50,150,255,0.06)");
+      gradient.addColorStop(1, "rgba(0,0,0,0)");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function animate() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawNebula();
+
+      let cx = canvas.width / 2;
+      let cy = canvas.height / 2;
+
+      dust.forEach(p => {
+        p.z -= 2;
+        if (p.z <= 0) p.z = canvas.width;
+
+        let sx = (p.x - cx) * (canvas.width / p.z) + cx;
+        let sy = (p.y - cy) * (canvas.width / p.z) + cy;
+
+        ctx.fillStyle = `rgba(255,255,255,${p.opacity})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      stars.forEach(star => {
+        star.z -= 4;
+        if (star.z <= 0) {
+          star.z = canvas.width;
+          star.x = Math.random() * canvas.width;
+          star.y = Math.random() * canvas.height;
+        }
+
+        let sx = (star.x - cx) * (canvas.width / star.z) + cx;
+        let sy = (star.y - cy) * (canvas.width / star.z) + cy;
+
+        let size = (1 - star.z / canvas.width) * 2.5;
+
+        ctx.fillStyle = star.color;
+        ctx.beginPath();
+        ctx.arc(sx, sy, size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      meteors.forEach((m, index) => {
+        m.x += m.vx;
+        m.y += m.vy;
+
+        let grad = ctx.createLinearGradient(
+          m.x, m.y,
+          m.x - 200, m.y - 200
+        );
+
+        grad.addColorStop(0, "white");
+        grad.addColorStop(0.3, "yellow");
+        grad.addColorStop(0.6, "orange");
+        grad.addColorStop(1, "transparent");
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 4;
+
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(m.x - 220, m.y - 220);
+        ctx.stroke();
+
+        if (m.y > canvas.height + 400) {
+          meteors.splice(index, 1);
+        }
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    startBtn.addEventListener("click", () => {
+      audio.play();
+
+      intro.style.opacity = "0";
+      canvas.style.opacity = "1";
+
+      setTimeout(() => {
+        intro.style.display = "none";
+      }, 2500);
+
+      createStars();
+      createDust();
+      animate();
+
+      setTimeout(() => {
+        finalBox.style.opacity = "1";
+        finalBox.style.pointerEvents = "auto";
+      }, 10000);
+    });
+
+    yesBtn.addEventListener("click", () => {
+      finalBox.style.opacity = "0";
+      finalBox.style.pointerEvents = "none";
+
+      setTimeout(() => {
+        goodMessage.style.opacity = "1";
+      }, 1500);
+
+      setTimeout(() => {
+        goodMessage.style.opacity = "0";
+      }, 6000);
+    });
+
+    noBtn.addEventListener("mouseover", () => {
+      noBtn.style.left = Math.random() * 200 - 100 + "px";
+      noBtn.style.top = Math.random() * 200 - 100 + "px";
+    });
+
+    window.addEventListener("resize", () => {
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+      createStars();
+      createDust();
+    });
+  </script>
+
+</body>
+</html>
+
